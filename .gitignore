@@ -13,6 +13,8 @@ dist/
 *.dylib
 *.pdb
 *.lnk
+*.apk
+android-app/build/
 
 # App distribution folder
 Badrock-App/

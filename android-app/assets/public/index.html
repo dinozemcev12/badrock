@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark" data-accent="gray">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Badrock</title>
+  <link rel="icon" type="image/png" href="/icon.png" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app" id="app">
+    <aside class="ribbon" aria-label="Главное меню">
+      <div class="ribbon-group">
+        <button class="ribbon-btn" data-action="new-note" title="Новая заметка (Ctrl+N)" aria-label="Новая заметка"><span data-icon="pencil-plus"></span></button>
+        <button class="ribbon-btn" data-action="search" title="Поиск (Ctrl+Shift+F)" aria-label="Поиск"><span data-icon="search"></span></button>
+        <button class="ribbon-btn" data-action="graph" title="Граф связей (Ctrl+G)" aria-label="Граф связей"><span data-icon="graph"></span></button>
+        <button class="ribbon-btn" data-action="daily" title="Ежедневная заметка (Ctrl+D)" aria-label="Ежедневная заметка"><span data-icon="calendar"></span></button>
+        <button class="ribbon-btn" data-action="random" title="Случайная заметка" aria-label="Случайная заметка"><span data-icon="shuffle"></span></button>
+        <button class="ribbon-btn" data-action="sync" title="Google Диск синхронизация" aria-label="Google Диск"><span data-icon="cloud"></span></button>
+      </div>
+      <div class="ribbon-spacer"></div>
+      <div class="ribbon-group">
+        <button class="ribbon-btn" data-action="toggle-theme" title="Сменить тему" aria-label="Сменить тему"><span data-icon="moon"></span></button>
+        <button class="ribbon-btn" data-action="help" title="Горячие клавиши" aria-label="Горячие клавиши"><span data-icon="help"></span></button>
+        <button class="ribbon-btn" data-action="settings" title="Настройки (Ctrl+,)" aria-label="Настройки"><span data-icon="settings"></span></button>
+      </div>
+    </aside>
+
+    <aside class="sidebar left" id="leftSidebar">
+      <div class="vault-bar">
+        <button class="vault-button" data-action="vault" title="Сменить хранилище">
+          <span class="vault-gem"><img src="/icon.png" alt="Badrock" style="width:18px;height:18px;vertical-align:middle;border-radius:2px;display:inline-block;" /></span>
+          <span class="vault-name" id="vaultName">Badrock</span>
+          <span class="vault-chevron" data-icon="chevron-down"></span>
+        </button>
+        <div class="vault-actions">
+          <button class="icon-btn" data-action="new-note" title="Новая заметка"><span data-icon="pencil-plus"></span></button>
+          <button class="icon-btn" data-action="new-folder" title="Новая папка"><span data-icon="folder-plus"></span></button>
+          <button class="icon-btn" data-action="collapse-all" title="Свернуть всё"><span data-icon="collapse"></span></button>
+          <button class="icon-btn" data-action="sort" title="Сортировка"><span data-icon="sort"></span></button>
+        </div>
+      </div>
+
+      <nav class="panel-nav" aria-label="Панели">
+        <button class="panel-tab active" data-panel="files" title="Файлы"><span data-icon="files"></span></button>
+        <button class="panel-tab" data-panel="search" title="Поиск"><span data-icon="search"></span></button>
+        <button class="panel-tab" data-panel="tags" title="Теги"><span data-icon="tag"></span></button>
+        <button class="panel-tab" data-panel="bookmarks" title="Закладки"><span data-icon="star"></span></button>
+      </nav>
+
+      <div class="panel-body">
+        <section class="panel-view" data-panel-view="files">
+          <div class="pane-tools">
+            <div class="search-field compact">
+              <span data-icon="search"></span>
+              <input id="fileFilter" type="text" placeholder="Фильтр по файлам…" autocomplete="off" spellcheck="false" />
+              <button class="field-clear hidden" data-action="clear-file-filter" title="Очистить"><span data-icon="x"></span></button>
+            </div>
+          </div>
+          <div class="file-tree" id="fileTree" role="tree"></div>
+        </section>
+
+        <section class="panel-view hidden" data-panel-view="search">
+          <div class="pane-tools">
+            <div class="search-field">
+              <span data-icon="search"></span>
+              <input id="searchInput" type="text" placeholder="Поиск по хранилищу…" autocomplete="off" spellcheck="false" />
+              <button class="field-clear hidden" data-action="clear-search" title="Очистить"><span data-icon="x"></span></button>
+            </div>
+          </div>
+          <div class="pane-hint" id="searchInfo"></div>
+          <div class="search-results" id="searchResults"></div>
+        </section>
+
+        <section class="panel-view hidden" data-panel-view="tags">
+          <div class="pane-hint" id="tagsInfo"></div>
+          <div class="tag-list" id="tagsList"></div>
+        </section>
+
+        <section class="panel-view hidden" data-panel-view="bookmarks">
+          <div class="pane-hint" id="bookmarksInfo"></div>
+          <div class="bookmark-list" id="bookmarksList"></div>
+        </section>
+      </div>
+
+      <div class="sidebar-footer" id="sidebarFooter">Загрузка…</div>
+      <div class="resize-handle" data-resize="left" title="Изменить ширину"></div>
+    </aside>
+
+    <main class="workspace">
+      <div class="tabbar">
+        <div class="tabs-scroll" id="tabsScroll">
+          <div class="tabs" id="tabs"></div>
+        </div>
+        <div class="tabbar-actions">
+          <button class="icon-btn" data-action="new-note" title="Новая заметка"><span data-icon="plus"></span></button>
+          <button class="icon-btn" data-action="toggle-right" title="Правая панель"><span data-icon="panel-right"></span></button>
+        </div>
+      </div>
+
+      <div class="view-header" id="viewHeader">
+        <div class="view-title-area">
+          <button class="icon-btn" data-action="toggle-left" title="Левая панель"><span data-icon="panel-left"></span></button>
+          <div class="breadcrumbs" id="breadcrumbs"></div>
+        </div>
+        <div class="view-actions" id="viewActions">
+          <div class="mode-switch" id="modeSwitch" role="group" aria-label="Режим просмотра">
+            <button data-mode="edit" title="Редактор (Ctrl+E)"><span data-icon="pencil"></span><span class="mode-label">Редактор</span></button>
+            <button data-mode="read" title="Чтение (Ctrl+E)"><span data-icon="book"></span><span class="mode-label">Чтение</span></button>
+            <button data-mode="split" title="Разделённый вид (Ctrl+Shift+E)"><span data-icon="columns"></span></button>
+          </div>
+          <button class="icon-btn" data-action="bookmark" id="btnBookmark" title="Добавить в закладки"><span data-icon="star"></span></button>
+          <button class="icon-btn" data-action="more" title="Дополнительно"><span data-icon="more"></span></button>
+        </div>
+      </div>
+
+      <div class="workspace-body">
+        <section class="note-view" id="noteView" data-mode="edit">
+          <div class="editor-pane" id="editorPane">
+            <div class="editor-scroll" id="editorScroll">
+              <div class="editor-content" id="editorContent">
+                <div class="editor-stack">
+                  <pre class="highlight-layer" id="highlightLayer" aria-hidden="true"></pre>
+                  <textarea id="editor" spellcheck="true" placeholder="Начните печатать…" aria-label="Редактор заметки"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="reading-pane" id="readingPane">
+            <div class="reading-scroll" id="readingScroll">
+              <article class="markdown-body" id="readingView"></article>
+            </div>
+          </div>
+        </section>
+
+        <section class="graph-view hidden" id="graphView">
+          <canvas id="graphCanvas"></canvas>
+          <div class="graph-empty hidden" id="graphEmpty">
+            <span data-icon="graph"></span>
+            <p>В хранилище пока нет заметок со связями.</p>
+          </div>
+          <div class="graph-controls">
+            <button class="icon-btn" data-action="graph-zoom-in" title="Приблизить"><span data-icon="zoom-in"></span></button>
+            <button class="icon-btn" data-action="graph-zoom-out" title="Отдалить"><span data-icon="zoom-out"></span></button>
+            <button class="icon-btn" data-action="graph-fit" title="Показать всё"><span data-icon="maximize"></span></button>
+            <button class="icon-btn" data-action="graph-labels" title="Подписи"><span data-icon="type"></span></button>
+            <button class="icon-btn" data-action="graph-refresh" title="Обновить граф"><span data-icon="refresh"></span></button>
+          </div>
+          <div class="graph-legend" id="graphLegend"></div>
+        </section>
+
+        <section class="empty-view hidden" id="emptyView"></section>
+      </div>
+
+      <footer class="statusbar">
+        <div class="status-left">
+          <button class="status-item" data-action="show-backlinks" title="Обратные ссылки"><span data-icon="link"></span><span id="statusBacklinks">0 ссылок</span></button>
+          <span class="status-item" id="statusWords">0 слов</span>
+          <span class="status-item" id="statusChars">0 символов</span>
+        </div>
+        <div class="status-right">
+          <span class="status-item save-state" id="statusSave"><span class="save-dot"></span><span>Готово</span></span>
+          <button class="status-item" data-action="toggle-mode" id="statusMode">Редактор</button>
+          <button class="status-item" data-action="vault" id="statusVault" title="Хранилище">Badrock</button>
+        </div>
+      </footer>
+    </main>
+
+    <aside class="sidebar right" id="rightSidebar">
+      <div class="resize-handle" data-resize="right" title="Изменить ширину"></div>
+      <div class="right-header">
+        <div class="right-tabs">
+          <button class="right-tab active" data-right="backlinks">Ссылки</button>
+          <button class="right-tab" data-right="outline">Структура</button>
+          <button class="right-tab" data-right="properties">Свойства</button>
+        </div>
+        <button class="icon-btn" data-action="toggle-right" title="Скрыть панель"><span data-icon="x"></span></button>
+      </div>
+      <div class="right-content" id="rightContent"></div>
+    </aside>
+  </div>
+
+  <div class="overlay cmd-overlay hidden" id="cmdOverlay">
+    <div class="cmd-modal" role="dialog" aria-modal="true" aria-label="Палитра команд">
+      <div class="cmd-input-row">
+        <span data-icon="command"></span>
+        <input id="cmdInput" type="text" placeholder="Введите команду…" autocomplete="off" spellcheck="false" />
+        <kbd>Esc</kbd>
+      </div>
+      <div class="cmd-list" id="cmdList"></div>
+      <div class="cmd-footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> навигация</span>
+        <span><kbd>Enter</kbd> выбрать</span>
+        <span><kbd>Ctrl+O</kbd> заметки</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="contextMenu" class="context-menu hidden" role="menu"></div>
+  <div id="suggestPopup" class="suggest-popup hidden" role="listbox"></div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <div class="caret-mirror" id="caretMirror" aria-hidden="true"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
