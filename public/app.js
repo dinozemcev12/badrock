@@ -5364,6 +5364,15 @@ function onSearchInput(event) {
   searchDebounce = setTimeout(() => runSearch(value.trim()), 180);
 }
 
+function getEventKey(event) {
+  if (event.code && event.code.startsWith('Key')) {
+    return event.code.slice(3).toLowerCase();
+  }
+  if (event.code === 'Comma') return ',';
+  if (event.code === 'Period') return '.';
+  return (event.key || '').toLowerCase();
+}
+
 function editorKeydown(event) {
   if (state.suggest) {
     if (event.key === 'ArrowDown') {
@@ -5389,6 +5398,7 @@ function editorKeydown(event) {
   }
 
   const mod = event.ctrlKey || event.metaKey;
+  const key = getEventKey(event);
 
   if (event.key === 'Tab' && !mod && !event.altKey) {
     event.preventDefault();
@@ -5403,19 +5413,19 @@ function editorKeydown(event) {
     }
   }
 
-  if (mod && (event.key === 'b' || event.key === 'B')) {
+  if (mod && key === 'b') {
     event.preventDefault();
     wrapEditorSelection('**', '**');
     return;
   }
-  if (mod && (event.key === 'i' || event.key === 'I')) {
+  if (mod && key === 'i') {
     event.preventDefault();
     wrapEditorSelection('*', '*');
     return;
   }
-  if (mod && (event.key === 'k' || event.key === 'K')) {
+  if (mod && key === 'k') {
     event.preventDefault();
-    wrapEditorSelection('[', ']()');
+    wrapEditorSelection('[[', ']]');
     return;
   }
 }
@@ -5511,7 +5521,7 @@ function onGlobalKeydown(event) {
   }
 
   const mod = event.ctrlKey || event.metaKey;
-  const key = event.key.toLowerCase();
+  const key = getEventKey(event);
   const target = event.target;
   const typing =
     target &&
