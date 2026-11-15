@@ -13,7 +13,7 @@ use crate::vault::{
 };
 use axum::body::Body;
 use axum::extract::{Query, State};
-use axum::http::{header, Method, Request, StatusCode, Uri};
+use axum::http::{header, HeaderMap, Method, Request, StatusCode, Uri};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -490,6 +490,7 @@ pub async fn api_sync_auth_url(
 
 pub async fn api_sync_oauth_callback(
     State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
     Query(params): Query<OAuthCallbackParams>,
 ) -> Response {
     if let Some(err) = params.error {
@@ -521,8 +522,16 @@ pub async fn api_sync_oauth_callback(
     };
     let client = GDriveClient::new(vault_dir);
 
-    // Try port 5176 (or default)
-    let port = 5176;
+    let host_str = headers
+        .get(header::HOST)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("127.0.0.1:5176");
+
+    let port = host_str
+        .split(':')
+        .nth(1)
+        .and_then(|p| p.parse::<u16>().ok())
+        .unwrap_or(5176);
     match client.handle_oauth_callback(&code, port) {
         Ok(_) => {
             let html = "<!DOCTYPE html><html><body style=\"font-family:sans-serif;background:#18181b;color:#f4f4f5;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;\"><div style=\"text-align:center;padding:36px;background:#27272a;border-radius:12px;border:1px solid #3f3f46;box-shadow:0 8px 32px rgba(0,0,0,0.4);max-width:440px;\"><div style=\"font-size:48px;margin-bottom:12px;\">✅</div><h2 style=\"margin:0 0 10px 0;font-size:20px;\">Авторизация Google Диска успешна!</h2><p style=\"color:#a1a1aa;font-size:14px;line-height:1.5;\">Badrock теперь подключен к вашему Google Диску. Вы можете закрыть эту страницу и вернуться в приложение.</p><button onclick=\"window.close()\" style=\"margin-top:16px;background:#52525b;border:none;color:#fff;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:14px;\">Закрыть окно</button><script>setTimeout(() => { window.close(); }, 3000);</script></div></body></html>";

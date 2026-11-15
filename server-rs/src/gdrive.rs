@@ -162,23 +162,55 @@ impl GDriveClient {
 
     pub fn handle_oauth_callback(&self, code: &str, port: u16) -> Result<(), String> {
         let mut cfg = self.load_config();
-        if cfg.client_id.trim().is_empty() || cfg.client_secret.trim().is_empty() {
+        let client_id = cfg.client_id.trim().to_string();
+        let client_secret = cfg.client_secret.trim().to_string();
+        let code = code.trim();
+
+        if client_id.is_empty() || client_secret.is_empty() {
             return Err("Не настроены Client ID или Client Secret".to_string());
         }
 
-        let redirect_uri = format!("http://127.0.0.1:{}/api/sync/oauth/callback", port);
         let agent = self.agent()?;
 
-        let resp = agent.post("https://oauth2.googleapis.com/token")
-            .set("Content-Type", "application/x-www-form-urlencoded")
-            .send_string(&format!(
-                "code={}&client_id={}&client_secret={}&redirect_uri={}&grant_type=authorization_code",
-                percent_encoding(code),
-                percent_encoding(&cfg.client_id),
-                percent_encoding(&cfg.client_secret),
-                percent_encoding(&redirect_uri)
-            ))
-            .map_err(|e| format!("Ошибка авторизации Google OAuth: {}", e))?;
+        let redirect_uris = [
+            format!("http://127.0.0.1:{}/api/sync/oauth/callback", port),
+            format!("http://localhost:{}/api/sync/oauth/callback", port),
+            format!("http://127.0.0.1:5176/api/sync/oauth/callback"),
+            format!("http://localhost:5176/api/sync/oauth/callback"),
+        ];
+
+        let mut last_err = String::new();
+        let mut success_resp = None;
+
+        for redirect_uri in &redirect_uris {
+            let res = agent.post("https://oauth2.googleapis.com/token")
+                .send_form(&[
+                    ("code", code),
+                    ("client_id", &client_id),
+                    ("client_secret", &client_secret),
+                    ("redirect_uri", redirect_uri.as_str()),
+                    ("grant_type", "authorization_code"),
+                ]);
+
+            match res {
+                Ok(resp) => {
+                    success_resp = Some(resp);
+                    break;
+                }
+                Err(ureq::Error::Status(status, resp)) => {
+                    let err_body = resp.into_string().unwrap_or_default();
+                    last_err = format!("Google OAuth вернул ошибку {}: {}", status, err_body);
+                }
+                Err(e) => {
+                    last_err = format!("Ошибка сети: {}", e);
+                }
+            }
+        }
+
+        let resp = match success_resp {
+            Some(r) => r,
+            None => return Err(last_err),
+        };
 
         let body: serde_json::Value = resp
             .into_json()
@@ -220,18 +252,28 @@ impl GDriveClient {
         let refresh = cfg
             .refresh_token
             .as_ref()
-            .ok_or_else(|| "Необходима авторизация в Google Диске".to_string())?;
+            .ok_or_else(|| "Необходима авторизация в Google Диске".to_string())?
+            .trim()
+            .to_string();
+
+        let client_id = cfg.client_id.trim().to_string();
+        let client_secret = cfg.client_secret.trim().to_string();
 
         let agent = self.agent()?;
         let resp = agent.post("https://oauth2.googleapis.com/token")
-            .set("Content-Type", "application/x-www-form-urlencoded")
-            .send_string(&format!(
-                "client_id={}&client_secret={}&refresh_token={}&grant_type=refresh_token",
-                percent_encoding(&cfg.client_id),
-                percent_encoding(&cfg.client_secret),
-                percent_encoding(refresh)
-            ))
-            .map_err(|e| format!("Ошибка обновления токена Google: {}", e))?;
+            .send_form(&[
+                ("client_id", &client_id),
+                ("client_secret", &client_secret),
+                ("refresh_token", &refresh),
+                ("grant_type", "refresh_token"),
+            ])
+            .map_err(|e| match e {
+                ureq::Error::Status(status, resp) => {
+                    let body = resp.into_string().unwrap_or_default();
+                    format!("Ошибка обновления токена Google ({}): {}", status, body)
+                }
+                other => format!("Ошибка обновления токена Google: {}", other),
+            })?;
 
         let body: serde_json::Value = resp
             .into_json()
