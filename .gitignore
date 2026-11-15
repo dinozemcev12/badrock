@@ -1,0 +1,30 @@
+# Rust build artifacts
+target/
+**/*.rs.bk
+
+# Node & web artifacts
+node_modules/
+dist/
+
+# Binaries and libraries
+*.exe
+*.dll
+*.so
+*.dylib
+*.pdb
+*.lnk
+
+# App distribution folder
+Badrock-App/
+
+# Logs & temp files
+*.log
+imports.txt
+
+# Google Drive sync tokens & sensitive config
+**/.badrock/
+**/gdrive-sync.json
+
+# OS files
+.DS_Store
+Thumbs.db

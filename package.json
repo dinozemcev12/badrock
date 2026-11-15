@@ -1,0 +1,12 @@
+{
+  "name": "badrock",
+  "productName": "Badrock",
+  "version": "1.0.0",
+  "description": "Free, open-source Obsidian-like notes app with a native Rust backend and local-first Markdown storage (clean-room reimplementation).",
+  "scripts": {
+    "start": "cargo run --release -p bedrock-server",
+    "build": "cargo build --release -p bedrock-server",
+    "build:offline": "cargo build --release --offline -p bedrock-server"
+  },
+  "license": "MIT"
+}
