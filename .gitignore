@@ -18,6 +18,7 @@ android-app/build/
 
 # App distribution folder
 Badrock-App/
+*.zip
 
 # Logs & temp files
 *.log
