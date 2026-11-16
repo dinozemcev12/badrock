@@ -50,6 +50,8 @@ Write-Host "3. Линковка манифеста и ресурсов (aapt2 li
 $UnsignedApk = "$ApkDir\app-unsigned.apk"
 & $Aapt2 link -I $AndroidJar `
     --manifest "$Root\AndroidManifest.xml" `
+    --min-sdk-version 24 `
+    --target-sdk-version 34 `
     --java $GenDir `
     -o $UnsignedApk `
     "$CompiledRes\resources.zip" `
@@ -59,13 +61,13 @@ if ($LASTEXITCODE -ne 0) { throw "aapt2 link failed with exit code $LASTEXITCODE
 # 5. Compile Java source files
 Write-Host "4. Компиляция исходных файлов Java..."
 $JavaFiles = Get-ChildItem "$Root\src\com\badrock\notes\*.java", "$GenDir\com\badrock\notes\*.java" | Select-Object -ExpandProperty FullName
-& javac --release 17 -cp $AndroidJar -d $ClassesDir $JavaFiles
+& javac --release 11 -cp $AndroidJar -d $ClassesDir $JavaFiles
 if ($LASTEXITCODE -ne 0) { throw "javac failed with exit code $LASTEXITCODE" }
 
 # 5. Convert bytecode to Dalvik Executable (classes.dex)
 Write-Host "5. Создание classes.dex (d8)..."
 $ClassFiles = Get-ChildItem "$ClassesDir\com\badrock\notes\*.class" | Select-Object -ExpandProperty FullName
-& $D8 --lib $AndroidJar --output $DexDir $ClassFiles
+& $D8 --min-api 24 --lib $AndroidJar --output $DexDir $ClassFiles
 if ($LASTEXITCODE -ne 0) { throw "d8 failed with exit code $LASTEXITCODE" }
 
 # 6. Add classes.dex into app-unsigned.apk
@@ -90,10 +92,10 @@ if (!(Test-Path $Keystore)) {
     & $Keytool -genkeypair -v -keystore $Keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Badrock Debug,O=Badrock,C=US"
 }
 
-# 10. Sign APK with apksigner
-Write-Host "9. Подпись APK (apksigner)..."
+# 10. Sign APK with apksigner (v1, v2, v3 schemes enabled for max compatibility)
+Write-Host "9. Подпись APK (apksigner: v1, v2, v3)..."
 $FinalApk = Join-Path $Root "Badrock.apk"
-& $Apksigner sign --ks $Keystore --ks-pass pass:android --out $FinalApk $AlignedApk
+& $Apksigner sign --min-sdk-version 21 --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true --ks $Keystore --ks-pass pass:android --out $FinalApk $AlignedApk
 if ($LASTEXITCODE -ne 0) { throw "apksigner failed with exit code $LASTEXITCODE" }
 
 # 11. Copy to Badrock-App folder for user convenience
